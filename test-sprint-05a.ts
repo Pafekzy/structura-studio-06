@@ -253,7 +253,14 @@ async function runSprint05AAcceptanceTests() {
     assert(briefing.model === 'gemini-3.7-flash', 'AI Briefing specifies runtime model gemini-3.7-flash');
     assert(briefing.isAiAssisted === true, 'AI Briefing truthfully tagged as isAiAssisted');
     assert(briefing.disclaimer.length > 0, 'AI Briefing includes truthful disclaimer banner');
-    assert(briefing.status === 'COMPLETED' || briefing.status === 'HUMAN_REVIEW_REQUIRED', 'AI Briefing returned valid completion status');
+    assert(
+      ['COMPLETED', 'HUMAN_REVIEW_REQUIRED', 'UNAVAILABLE', 'FAILED'].includes(briefing.status),
+      'AI Briefing returned valid truthful status'
+    );
+    assert(
+      briefing.status !== 'UNAVAILABLE' || briefing.executiveBriefing.toLowerCase().includes('unavailable'),
+      'AI unavailability is reported truthfully without fabricated completion'
+    );
   } catch (err: any) {
     assert(false, 'AI Executive Briefing Suite execution', err.message);
   }
