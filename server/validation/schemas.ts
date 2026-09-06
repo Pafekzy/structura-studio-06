@@ -327,3 +327,116 @@ export const requestAIMemorySummarySchema = z.object({
 export const markNotificationReadSchema = z.object({
   isRead: z.boolean().default(true),
 });
+
+// Part U: Punch / Outstanding Item Schemas (Sprint 05A)
+export const createPunchItemSchema = z.object({
+  milestoneId: z.string().optional(),
+  title: z.string().min(3, 'Title must be at least 3 characters').max(200),
+  description: z.string().min(5, 'Description must be at least 5 characters').max(3000),
+  category: z.enum([
+    'ARCHITECTURAL',
+    'STRUCTURAL',
+    'MEP',
+    'FINISHING',
+    'DOCUMENTATION',
+    'SAFETY',
+    'GENERAL',
+  ]).default('GENERAL'),
+  priority: z.enum(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']).default('MEDIUM'),
+  assignedToUserId: z.string().optional(),
+  evidenceIds: z.array(z.string()).optional().default([]),
+});
+
+export const updatePunchItemSchema = z.object({
+  title: z.string().min(3).max(200).optional(),
+  description: z.string().min(5).max(3000).optional(),
+  category: z.enum([
+    'ARCHITECTURAL',
+    'STRUCTURAL',
+    'MEP',
+    'FINISHING',
+    'DOCUMENTATION',
+    'SAFETY',
+    'GENERAL',
+  ]).optional(),
+  priority: z.enum(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']).optional(),
+  evidenceIds: z.array(z.string()).optional(),
+});
+
+export const assignPunchItemSchema = z.object({
+  assignedToUserId: z.string().min(1, 'Assigned user ID is required'),
+});
+
+export const submitPunchResolutionSchema = z.object({
+  resolutionDescription: z.string().min(5, 'Resolution description must be at least 5 characters').max(3000),
+  resolutionEvidenceIds: z.array(z.string()).optional().default([]),
+});
+
+export const verifyPunchItemSchema = z.object({
+  decision: z.enum(['VERIFIED', 'REQUIRE_REWORK']),
+  verificationNotes: z.string().min(5, 'Verification notes must be at least 5 characters').max(3000),
+});
+
+export const closePunchItemSchema = z.object({
+  closingNotes: z.string().max(2000).optional(),
+});
+
+// Part V: Project Closeout Schemas (Sprint 05A)
+export const initiateCloseoutSchema = z.object({
+  summary: z.string().max(3000).optional().default('Project closeout initiated for governance inspection, checklist verification, and handover readiness.'),
+  customChecklistItems: z.array(z.object({
+    category: z.enum([
+      'MILESTONES',
+      'TECHNICAL_REVIEWS',
+      'QA_QC',
+      'NCRS',
+      'OWNER_DECISIONS',
+      'PROJECT_DECISIONS',
+      'EVIDENCE',
+      'PUNCH_ITEMS',
+      'GOVERNANCE',
+      'DOCUMENTATION',
+    ]),
+    title: z.string().min(3).max(200),
+    description: z.string().min(5).max(1000),
+    isRequired: z.boolean().default(true),
+  })).optional(),
+});
+
+export const updateCloseoutChecklistItemSchema = z.object({
+  isCompleted: z.boolean(),
+  notes: z.string().max(2000).optional(),
+  verifiedReferenceId: z.string().max(100).optional(),
+});
+
+export const completeCloseoutSchema = z.object({
+  closeoutSummary: z.string().min(5, 'Closeout summary must be at least 5 characters').max(4000),
+});
+
+export const returnCloseoutSchema = z.object({
+  returnReason: z.string().min(5, 'Return reason must be at least 5 characters').max(3000),
+});
+
+// Part W: Handover Schemas (Sprint 05A)
+export const prepareHandoverSchema = z.object({
+  targetHandoverDate: z.string().optional(),
+  handoverNotes: z.string().max(4000).optional().default('Handover package compiled from canonical project records, milestone completions, and QA/QC certificates.'),
+  customChecklist: z.array(z.object({
+    title: z.string().min(3).max(200),
+    category: z.string().min(2).max(100),
+    isRequired: z.boolean().default(true),
+    notes: z.string().max(1000).optional(),
+  })).optional(),
+});
+
+export const recordHandoverDecisionSchema = z.object({
+  decision: z.enum(['ACCEPT', 'RETURN']),
+  notes: z.string().min(5, 'Decision notes must be at least 5 characters').max(4000),
+  actualHandoverDate: z.string().optional(),
+});
+
+// Part X: Executive Reporting & AI Briefing Schemas (Sprint 05A)
+export const requestAIExecutiveBriefingSchema = z.object({
+  focusArea: z.enum(['FULL_BRIEFING', 'RISK_FOCUSED', 'CLOSEOUT_FOCUSED', 'FINANCIAL_GOVERNANCE']).optional().default('FULL_BRIEFING'),
+  includeHistoricalDecisions: z.boolean().optional().default(true),
+});

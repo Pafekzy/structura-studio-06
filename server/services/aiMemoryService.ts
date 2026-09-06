@@ -231,7 +231,7 @@ Return a JSON object strictly matching this schema:
         pendingDecisionsAndActions: [],
         referencedSourcesCount: entries.length,
         sourceRecordRefs,
-        disclaimer: 'AI inference failed. Canonical records preserved. Requires manual project director review.',
+        disclaimer: 'AI inference failed. Canonical records preserved. Requires manual project director review and professional verification.',
         errorMessage: err?.message || 'Gemini inference failed',
       };
     }

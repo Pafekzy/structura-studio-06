@@ -285,6 +285,7 @@ export type IdentityStatus = 'NOT_STARTED' | 'PENDING' | 'VERIFIED' | 'REJECTED'
 export type ProfessionalVerificationStatus =
   | 'NOT_REQUIRED'
   | 'NOT_STARTED'
+  | 'UNVERIFIED'
   | 'PENDING'
   | 'VERIFIED'
   | 'REJECTED'
@@ -462,7 +463,48 @@ export type AuditAction =
   | 'TECHNICAL_REVIEW_CHANGES_REQUESTED'
   | 'TECHNICAL_SUBMISSION_ACCEPTED'
   | 'TECHNICAL_SUBMISSION_ESCALATED'
-  | 'TECHNICAL_SUBMISSION_SENT_TO_QA_QC';
+  | 'TECHNICAL_SUBMISSION_SENT_TO_QA_QC'
+  | 'QA_QC_INSPECTION_STARTED'
+  | 'QA_QC_INSPECTION_PASSED'
+  | 'QA_QC_INSPECTION_FAILED'
+  | 'NCR_CREATED'
+  | 'NCR_CORRECTIVE_ACTION_SUBMITTED'
+  | 'NCR_REINSPECTION_COMPLETED'
+  | 'NCR_CLOSED'
+  | 'AI_INSPECTION_REQUESTED'
+  | 'AI_INSPECTION_COMPLETED'
+  | 'AI_INSPECTION_FAILED'
+  | 'OWNER_DECISION_APPROVED'
+  | 'OWNER_DECISION_RETURNED'
+  | 'OWNER_DECISION_REJECTED'
+  | 'FINANCIAL_PROCESSING_AUTHORIZED'
+  | 'PROJECT_DECISION_CREATED'
+  | 'PROJECT_DECISION_PROPOSED'
+  | 'PROJECT_DECISION_RECORDED'
+  | 'PROJECT_DECISION_SUPERSEDED'
+  | 'NOTIFICATION_READ'
+  | 'PROJECT_MEMORY_SUMMARY_REQUESTED'
+  | 'PROJECT_MEMORY_SUMMARY_COMPLETED'
+  | 'PROJECT_MEMORY_SUMMARY_FAILED'
+  | 'EXECUTIVE_REPORT_GENERATED'
+  | 'CLOSEOUT_STARTED'
+  | 'CLOSEOUT_ITEM_COMPLETED'
+  | 'CLOSEOUT_READY_FOR_REVIEW'
+  | 'CLOSEOUT_COMPLETED'
+  | 'CLOSEOUT_RETURNED'
+  | 'PUNCH_ITEM_CREATED'
+  | 'PUNCH_ITEM_ASSIGNED'
+  | 'PUNCH_ITEM_READY_FOR_VERIFICATION'
+  | 'PUNCH_ITEM_VERIFIED'
+  | 'PUNCH_ITEM_CLOSED'
+  | 'HANDOVER_PREPARED'
+  | 'HANDOVER_READY_FOR_REVIEW'
+  | 'HANDOVER_RETURNED'
+  | 'HANDOVER_ACCEPTED'
+  | 'PROJECT_HANDOVER_COMPLETED'
+  | 'AI_EXECUTIVE_BRIEFING_REQUESTED'
+  | 'AI_EXECUTIVE_BRIEFING_COMPLETED'
+  | 'AI_EXECUTIVE_BRIEFING_FAILED';
 
 export interface AuditEvent {
   id: string;
@@ -1132,6 +1174,17 @@ export type NotificationType =
   | 'PROJECT_DECISION_PROPOSED'
   | 'PROJECT_DECISION_DECIDED'
   | 'PROJECT_DECISION_SUPERSEDED'
+  | 'CLOSEOUT_INITIATED'
+  | 'CLOSEOUT_COMPLETED'
+  | 'CLOSEOUT_RETURNED'
+  | 'PUNCH_ITEM_ASSIGNED'
+  | 'PUNCH_ITEM_READY_FOR_VERIFICATION'
+  | 'PUNCH_ITEM_VERIFIED'
+  | 'PUNCH_ITEM_CLOSED'
+  | 'HANDOVER_PREPARED'
+  | 'HANDOVER_READY_FOR_REVIEW'
+  | 'HANDOVER_ACCEPTED'
+  | 'HANDOVER_RETURNED'
   | 'SYSTEM_ANNOUNCEMENT';
 
 export type NotificationSeverity =
@@ -1156,3 +1209,406 @@ export interface ProjectNotification {
   createdAt: string;
   isDemo?: boolean;
 }
+
+// ==========================================
+// Project Operations: Punch / Outstanding Items (Sprint 05A)
+// ==========================================
+
+export type PunchItemStatus =
+  | 'OPEN'
+  | 'ASSIGNED'
+  | 'IN_PROGRESS'
+  | 'READY_FOR_VERIFICATION'
+  | 'VERIFIED'
+  | 'CLOSED';
+
+export type PunchItemPriority =
+  | 'LOW'
+  | 'MEDIUM'
+  | 'HIGH'
+  | 'CRITICAL';
+
+export type PunchItemCategory =
+  | 'ARCHITECTURAL'
+  | 'STRUCTURAL'
+  | 'MEP'
+  | 'FINISHING'
+  | 'FINISH'
+  | 'FINISHES'
+  | 'DOCUMENTATION'
+  | 'SAFETY'
+  | 'GENERAL'
+  | 'OTHER';
+
+export interface PunchItem {
+  id: string;
+  projectId: string;
+  number: string; // e.g. PUNCH-001
+  milestoneId?: string;
+  title: string;
+  description: string;
+  category: PunchItemCategory;
+  priority: PunchItemPriority;
+  status: PunchItemStatus;
+
+  raisedByUserId: string;
+  raisedByRole: ProjectRole;
+  raisedByName: string;
+  raisedAt: string;
+
+  assignedToUserId?: string;
+  assignedToRole?: ProjectRole;
+  assignedToName?: string;
+  assignedAt?: string;
+
+  evidenceIds?: string[];
+
+  resolutionDescription?: string;
+  resolutionEvidenceIds?: string[];
+  resolvedAt?: string;
+  resolvedByUserId?: string;
+  resolvedByName?: string;
+
+  verificationNotes?: string;
+  verifiedAt?: string;
+  verifiedByUserId?: string;
+  verifiedByName?: string;
+
+  closedAt?: string;
+  closedByUserId?: string;
+  closedByName?: string;
+  closingNotes?: string;
+
+  location?: string;
+  trade?: string;
+  notes?: string;
+
+  createdAt: string;
+  updatedAt: string;
+  isDemo?: boolean;
+}
+
+// Alias
+export type ProjectPunchItem = PunchItem;
+
+// ==========================================
+// Project Operations: Project Closeout Domain (Sprint 05A)
+// ==========================================
+
+export type CloseoutStatus =
+  | 'NOT_STARTED'
+  | 'IN_PROGRESS'
+  | 'READY_FOR_REVIEW'
+  | 'COMPLETED'
+  | 'RETURNED';
+
+export type CloseoutCategory =
+  | 'MILESTONES'
+  | 'TECHNICAL_REVIEWS'
+  | 'QA_QC'
+  | 'NCRS'
+  | 'OWNER_DECISIONS'
+  | 'PROJECT_DECISIONS'
+  | 'EVIDENCE'
+  | 'PUNCH_ITEMS'
+  | 'GOVERNANCE'
+  | 'DOCUMENTATION';
+
+export interface CloseoutChecklistItem {
+  id: string;
+  closeoutId: string;
+  category: CloseoutCategory;
+  title: string;
+  description: string;
+  isRequired: boolean;
+  isCompleted: boolean;
+  completedAt?: string;
+  completedByUserId?: string;
+  completedByName?: string;
+  verifiedReferenceId?: string;
+  notes?: string;
+}
+
+export interface ProjectCloseout {
+  id: string;
+  projectId: string;
+  status: CloseoutStatus;
+
+  initiatedByUserId?: string;
+  initiatedByRole?: ProjectRole;
+  initiatedByName?: string;
+  initiatedAt?: string;
+
+  completedByUserId?: string;
+  completedByRole?: ProjectRole;
+  completedByName?: string;
+  completedAt?: string;
+
+  returnedByUserId?: string;
+  returnedByName?: string;
+  returnedAt?: string;
+  returnReason?: string;
+
+  closeoutNotes?: string;
+  summary?: string;
+  checklist: CloseoutChecklistItem[];
+  gateEvaluation?: CloseoutGateEvaluation;
+
+  createdAt: string;
+  updatedAt: string;
+  isDemo?: boolean;
+}
+
+export interface CloseoutGateEvaluation {
+  canComplete: boolean;
+  blockers: string[];
+  gateDetails: {
+    requiredMilestonesComplete: boolean;
+    openBlockingNCRsCount: number;
+    unresolvedQAQCCount: number;
+    missingRequiredEvidenceCount: number;
+    unresolvedCriticalPunchCount: number;
+    allRequiredChecklistItemsPassed: boolean;
+  };
+}
+
+// ==========================================
+// Project Operations: Project Handover Domain (Sprint 05A)
+// ==========================================
+
+export type HandoverStatus =
+  | 'NOT_READY'
+  | 'IN_PREPARATION'
+  | 'READY_FOR_REVIEW'
+  | 'RETURNED'
+  | 'ACCEPTED'
+  | 'HANDOVER_COMPLETE';
+
+export interface HandoverChecklistItem {
+  id: string;
+  title: string;
+  description?: string;
+  category: string;
+  isRequired: boolean;
+  isSatisfied?: boolean;
+  isCompleted?: boolean;
+  sourceReference?: string;
+  verifiedReferenceId?: string;
+  notes?: string;
+  completedByUserId?: string;
+  completedByName?: string;
+  completedAt?: string;
+}
+
+export interface ProjectHandover {
+  id: string;
+  projectId: string;
+  status: HandoverStatus;
+
+  targetHandoverDate?: string;
+  actualHandoverDate?: string;
+
+  preparedByUserId?: string;
+  preparedByRole?: ProjectRole;
+  preparedByName?: string;
+  preparedAt?: string;
+
+  reviewedByUserId?: string;
+  reviewedByRole?: ProjectRole;
+  reviewedByName?: string;
+  reviewedAt?: string;
+
+  acceptedByUserId?: string;
+  acceptedByRole?: ProjectRole;
+  acceptedByName?: string;
+  acceptedAt?: string;
+
+  returnReason?: string;
+  handoverNotes?: string;
+  acceptanceNotes?: string;
+
+  includedRecordCounts: {
+    milestones: number;
+    evidence: number;
+    technicalReviews: number;
+    qaqcInspections: number;
+    ncrs: number;
+    ownerDecisions: number;
+    projectDecisions: number;
+    rfis: number;
+    punchItems: number;
+    closeoutItems: number;
+  };
+
+  checklist: HandoverChecklistItem[];
+
+  createdAt: string;
+  updatedAt: string;
+  isDemo?: boolean;
+}
+
+export interface HandoverGateItem {
+  id: string;
+  name: string;
+  status: 'PASSED' | 'BLOCKED' | 'PENDING' | 'ATTENTION';
+  description: string;
+  details?: string[];
+}
+
+export interface HandoverReadinessEvaluation {
+  isReady: boolean;
+  isReadyForReview?: boolean;
+  blockingGatesCount?: number;
+  blockers: string[];
+  gates: HandoverGateItem[] | any;
+}
+
+// ==========================================
+// Executive Project Reporting & Health (Sprint 05A)
+// ==========================================
+
+export type ProjectHealthStatus =
+  | 'HEALTHY'
+  | 'ATTENTION_REQUIRED'
+  | 'AT_RISK'
+  | 'BLOCKED';
+
+export interface ProjectHealthFactor {
+  id: string;
+  name: string;
+  category:
+    | 'MILESTONES'
+    | 'TECHNICAL_REVIEW'
+    | 'QA_QC'
+    | 'NCRS'
+    | 'DECISIONS'
+    | 'RFIS'
+    | 'EVIDENCE'
+    | 'PUNCH_LIST'
+    | 'CLOSEOUT'
+    | 'HANDOVER'
+    | 'FINANCIAL';
+  status: 'OPTIMAL' | 'ATTENTION' | 'CRITICAL' | 'BLOCKED';
+  score: number; // 0 - 100
+  weight: number; // Decimal weight summing to 1.0
+  summary: string;
+  details: string[];
+  blockingItemsCount: number;
+}
+
+export interface ProjectHealthSummary {
+  overallStatus: ProjectHealthStatus;
+  overallScore: number; // 0 - 100
+  evaluationTimestamp: string;
+  executiveSummary: string;
+  factors: ProjectHealthFactor[];
+  criticalBlockers: string[];
+  attentionItems: string[];
+}
+
+export interface MilestoneProgressSummary {
+  totalMilestones: number;
+  completedCount: number;
+  inProgressCount: number;
+  notStartedCount: number;
+  blockedCount: number;
+  awaitingTechnicalReviewCount: number;
+  awaitingQAQCCount: number;
+  awaitingOwnerReviewCount: number;
+  approvedCount: number;
+  financiallyAuthorizedCount: number;
+  totalCostAllocationUSD: number;
+  financiallyAuthorizedUSD: number;
+  percentMilestonesApproved: number;
+  percentMilestonesFinanciallyAuthorized: number;
+}
+
+export interface ExecutiveRiskSummary {
+  totalOpenNCRs: number;
+  blockingNCRsCount: number;
+  failedQAQCCount: number;
+  unansweredRFIsCount: number;
+  unresolvedDecisionsCount: number;
+  openCriticalPunchCount: number;
+  missingEvidenceCount: number;
+  items: Array<{
+    id: string;
+    type: string;
+    title: string;
+    severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+    referenceId: string;
+    description: string;
+    actionRequired: string;
+  }>;
+}
+
+export interface ExecutiveProjectReport {
+  projectId: string;
+  projectName: string;
+  generatedAt: string;
+  generatedByUserId?: string;
+  generatedByName?: string;
+  health: ProjectHealthSummary;
+  progress: MilestoneProgressSummary;
+  risks: ExecutiveRiskSummary;
+  closeoutStatus: CloseoutStatus;
+  handoverStatus: HandoverStatus;
+  punchItemCounts: {
+    total: number;
+    open: number;
+    assigned: number;
+    inProgress: number;
+    readyForVerification: number;
+    verified: number;
+    closed: number;
+    critical: number;
+  };
+  financialGovernance: {
+    totalBaselineBudgetUSD: number;
+    costAllocationTotalUSD: number;
+    authorizedForFinancialProcessingUSD: number;
+    financialProcessingStatus: string;
+    note: string;
+  };
+  disclaimer: string;
+}
+
+export interface FinalProjectRecordPackage {
+  project: ConstructionProject;
+  report: ExecutiveProjectReport;
+  records: {
+    milestones: ProjectMilestone[];
+    evidence: ProjectEvidence[];
+    technicalReviews: ProjectDirectorTechnicalReview[];
+    qaqcInspections: QAQCInspection[];
+    ncrs: NonConformanceReport[];
+    ownerDecisions: OwnerMilestoneDecision[];
+    projectDecisions: ProjectDecision[];
+    rfis: RFI[];
+    punchItems: PunchItem[];
+    closeout: ProjectCloseout | null;
+    handover: ProjectHandover | null;
+  };
+  auditTrail: AuditEvent[];
+  archivalStatus: 'ACTIVE_GOVERNANCE' | 'ARCHIVED';
+}
+
+export interface AIExecutiveBriefing {
+  id: string;
+  projectId: string;
+  model: string; // strictly 'gemini-3.7-flash'
+  generatedAt: string;
+  isAiAssisted: boolean;
+  status: 'COMPLETED' | 'UNAVAILABLE' | 'FAILED' | 'HUMAN_REVIEW_REQUIRED';
+  executiveBriefing: string;
+  healthDiagnosis: string;
+  progressHighlights: string[];
+  keyRisksAndBlockers: string[];
+  closeoutAndHandoverReadiness: string;
+  governanceActionsRequired: string[];
+  referencedSourcesCount: number;
+  sourceRecordRefs: ProjectRecordRef[];
+  disclaimer: string;
+  errorMessage?: string;
+}
+

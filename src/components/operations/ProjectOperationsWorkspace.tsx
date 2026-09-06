@@ -12,7 +12,12 @@ import {
   Layers,
   Sparkles,
   Scale,
-  History
+  History,
+  LayoutDashboard,
+  CheckSquare,
+  KeyRound,
+  Award,
+  FolderArchive,
 } from 'lucide-react';
 import { ConstructionProject, NavigationTab } from '../../types';
 import { DirectLinePanel } from './DirectLinePanel';
@@ -26,6 +31,11 @@ import { OwnerDecisionPanel } from './OwnerDecisionPanel';
 import { ProjectDecisionsPanel } from './ProjectDecisionsPanel';
 import { ProjectMemoryPanel } from './ProjectMemoryPanel';
 import { NotificationCenter } from './NotificationCenter';
+import { PunchListPanel } from './PunchListPanel';
+import { ProjectCloseoutPanel } from './ProjectCloseoutPanel';
+import { ProjectHandoverPanel } from './ProjectHandoverPanel';
+import { ExecutiveDashboardPanel } from './ExecutiveDashboardPanel';
+import { FinalProjectRecordPanel } from './FinalProjectRecordPanel';
 import { useAuth } from '../../context/AuthContext';
 
 interface ProjectOperationsWorkspaceProps {
@@ -41,8 +51,24 @@ export const ProjectOperationsWorkspace: React.FC<ProjectOperationsWorkspaceProp
 }) => {
   const { userProfile, user } = useAuth();
   const [activeSubTab, setActiveSubTab] = useState<
-    'milestones' | 'decisions' | 'qaqc' | 'ncrs' | 'ai_inspection' | 'owner_decision' | 'memory' | 'evidence' | 'direct_line' | 'rfis'
-  >('milestones');
+    | 'executive'
+    | 'milestones'
+    | 'decisions'
+    | 'qaqc'
+    | 'ncrs'
+    | 'ai_inspection'
+    | 'owner_decision'
+    | 'memory'
+    | 'evidence'
+    | 'punch_list'
+    | 'closeout'
+    | 'handover'
+    | 'final_record'
+    | 'direct_line'
+    | 'rfis'
+  >('executive');
+
+  const resolvedRole = (userProfile as any)?.projectRole || (userProfile as any)?.role || 'VIEWER';
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
@@ -75,7 +101,7 @@ export const ProjectOperationsWorkspace: React.FC<ProjectOperationsWorkspaceProp
             </h1>
 
             <p className="text-xs text-slate-300 max-w-2xl leading-relaxed">
-              Governed operational coordination, bilateral direct lines, milestone technical submissions, and verified project evidence. Authority derives strictly from active appointments on this project.
+              Governed operational coordination, executive health visibility, technical reviews, QA/QC audits, closeout governance, and final project handover dossiers. Authority derives strictly from active appointments on this project.
             </p>
           </div>
 
@@ -116,6 +142,20 @@ export const ProjectOperationsWorkspace: React.FC<ProjectOperationsWorkspaceProp
         {/* Tab Navigation */}
         <div className="flex flex-wrap items-center gap-2 mt-8 pt-4 border-t border-white/10">
           <button
+            id="tab-btn-executive"
+            onClick={() => setActiveSubTab('executive')}
+            className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition ${
+              activeSubTab === 'executive'
+                ? 'bg-indigo-600 text-white shadow-sm'
+                : 'bg-white/5 text-slate-300 hover:bg-white/10'
+            }`}
+          >
+            <LayoutDashboard className="w-3.5 h-3.5" />
+            <span>Executive Dashboard</span>
+          </button>
+
+          <button
+            id="tab-btn-milestones"
             onClick={() => setActiveSubTab('milestones')}
             className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition ${
               activeSubTab === 'milestones'
@@ -124,7 +164,7 @@ export const ProjectOperationsWorkspace: React.FC<ProjectOperationsWorkspaceProp
             }`}
           >
             <Layers className="w-3.5 h-3.5" />
-            <span>Milestones & Technical Review</span>
+            <span>Milestones & Review</span>
           </button>
 
           <button
@@ -141,6 +181,7 @@ export const ProjectOperationsWorkspace: React.FC<ProjectOperationsWorkspaceProp
           </button>
 
           <button
+            id="tab-btn-qaqc"
             onClick={() => setActiveSubTab('qaqc')}
             className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition ${
               activeSubTab === 'qaqc'
@@ -149,10 +190,11 @@ export const ProjectOperationsWorkspace: React.FC<ProjectOperationsWorkspaceProp
             }`}
           >
             <ShieldCheck className="w-3.5 h-3.5" />
-            <span>QA/QC Inspection Gate</span>
+            <span>QA/QC Gate</span>
           </button>
 
           <button
+            id="tab-btn-ncrs"
             onClick={() => setActiveSubTab('ncrs')}
             className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition ${
               activeSubTab === 'ncrs'
@@ -162,6 +204,58 @@ export const ProjectOperationsWorkspace: React.FC<ProjectOperationsWorkspaceProp
           >
             <AlertCircle className="w-3.5 h-3.5" />
             <span>Non-Conformance (NCR)</span>
+          </button>
+
+          <button
+            id="tab-btn-punch-list"
+            onClick={() => setActiveSubTab('punch_list')}
+            className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition ${
+              activeSubTab === 'punch_list'
+                ? 'bg-amber-500 text-slate-950 shadow-sm'
+                : 'bg-white/5 text-slate-300 hover:bg-white/10'
+            }`}
+          >
+            <CheckSquare className="w-3.5 h-3.5" />
+            <span>Punch List</span>
+          </button>
+
+          <button
+            id="tab-btn-closeout"
+            onClick={() => setActiveSubTab('closeout')}
+            className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition ${
+              activeSubTab === 'closeout'
+                ? 'bg-teal-600 text-white shadow-sm'
+                : 'bg-white/5 text-slate-300 hover:bg-white/10'
+            }`}
+          >
+            <Award className="w-3.5 h-3.5" />
+            <span>Closeout</span>
+          </button>
+
+          <button
+            id="tab-btn-handover"
+            onClick={() => setActiveSubTab('handover')}
+            className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition ${
+              activeSubTab === 'handover'
+                ? 'bg-emerald-600 text-white shadow-sm'
+                : 'bg-white/5 text-slate-300 hover:bg-white/10'
+            }`}
+          >
+            <KeyRound className="w-3.5 h-3.5" />
+            <span>Handover</span>
+          </button>
+
+          <button
+            id="tab-btn-final-record"
+            onClick={() => setActiveSubTab('final_record')}
+            className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition ${
+              activeSubTab === 'final_record'
+                ? 'bg-slate-700 text-white shadow-sm'
+                : 'bg-white/5 text-slate-300 hover:bg-white/10'
+            }`}
+          >
+            <FolderArchive className="w-3.5 h-3.5" />
+            <span>Final Record</span>
           </button>
 
           <button
@@ -240,7 +334,13 @@ export const ProjectOperationsWorkspace: React.FC<ProjectOperationsWorkspaceProp
       </div>
 
       {/* Sub-tab view */}
-      {activeSubTab === 'milestones' ? (
+      {activeSubTab === 'executive' ? (
+        <ExecutiveDashboardPanel
+          projectId={project.id}
+          userRole={resolvedRole}
+          onNavigateToTab={(tab: string) => setActiveSubTab(tab as any)}
+        />
+      ) : activeSubTab === 'milestones' ? (
         <MilestonesRegisterPanel projectId={project.id} isDemo={project.isDemo} />
       ) : activeSubTab === 'decisions' ? (
         <ProjectDecisionsPanel projectId={project.id} isDemo={project.isDemo} />
@@ -248,6 +348,26 @@ export const ProjectOperationsWorkspace: React.FC<ProjectOperationsWorkspaceProp
         <QAQCInspectionPanel projectId={project.id} isDemo={project.isDemo} />
       ) : activeSubTab === 'ncrs' ? (
         <NCRRegisterPanel projectId={project.id} isDemo={project.isDemo} />
+      ) : activeSubTab === 'punch_list' ? (
+        <PunchListPanel projectId={project.id} userRole={resolvedRole} />
+      ) : activeSubTab === 'closeout' ? (
+        <ProjectCloseoutPanel
+          projectId={project.id}
+          userRole={resolvedRole}
+          onNavigateToTab={(tab: string) => setActiveSubTab(tab as any)}
+        />
+      ) : activeSubTab === 'handover' ? (
+        <ProjectHandoverPanel
+          projectId={project.id}
+          userRole={resolvedRole}
+          onNavigateToTab={(tab: string) => setActiveSubTab(tab as any)}
+        />
+      ) : activeSubTab === 'final_record' ? (
+        <FinalProjectRecordPanel
+          projectId={project.id}
+          userRole={resolvedRole}
+          onNavigateToTab={(tab: string) => setActiveSubTab(tab as any)}
+        />
       ) : activeSubTab === 'ai_inspection' ? (
         <AIInspectionPanel projectId={project.id} isDemo={project.isDemo} />
       ) : activeSubTab === 'owner_decision' ? (
@@ -264,3 +384,4 @@ export const ProjectOperationsWorkspace: React.FC<ProjectOperationsWorkspaceProp
     </div>
   );
 };
+

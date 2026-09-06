@@ -10,6 +10,10 @@ import { milestoneRouter } from './server/routes/milestoneRoutes';
 import { projectDecisionRouter } from './server/routes/projectDecisionRoutes';
 import { projectMemoryRouter } from './server/routes/projectMemoryRoutes';
 import { notificationRouter } from './server/routes/notificationRoutes';
+import { punchItemRouter } from './server/routes/punchItemRoutes';
+import { closeoutRouter } from './server/routes/closeoutRoutes';
+import { handoverRouter } from './server/routes/handoverRoutes';
+import { executiveReportingRouter } from './server/routes/executiveReportingRoutes';
 import { ensureDemoDataSeeded } from './server/data/demoSeed';
 
 dotenv.config();
@@ -40,6 +44,12 @@ app.use('/api', milestoneRouter);
 app.use('/api', projectDecisionRouter);
 app.use('/api', projectMemoryRouter);
 app.use('/api', notificationRouter);
+
+// Executive Reporting, Project Health, Closeout, Punch List & Handover (Sprint 05A)
+app.use('/api', punchItemRouter);
+app.use('/api', closeoutRouter);
+app.use('/api', handoverRouter);
+app.use('/api', executiveReportingRouter);
 
 // Lazy initialization of GoogleGenAI
 let aiClient: GoogleGenAI | null = null;
