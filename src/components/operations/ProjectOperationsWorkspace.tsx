@@ -10,7 +10,9 @@ import {
   HelpCircle,
   Clock,
   Layers,
-  Sparkles
+  Sparkles,
+  Scale,
+  History
 } from 'lucide-react';
 import { ConstructionProject, NavigationTab } from '../../types';
 import { DirectLinePanel } from './DirectLinePanel';
@@ -21,6 +23,9 @@ import { QAQCInspectionPanel } from './QAQCInspectionPanel';
 import { NCRRegisterPanel } from './NCRRegisterPanel';
 import { AIInspectionPanel } from './AIInspectionPanel';
 import { OwnerDecisionPanel } from './OwnerDecisionPanel';
+import { ProjectDecisionsPanel } from './ProjectDecisionsPanel';
+import { ProjectMemoryPanel } from './ProjectMemoryPanel';
+import { NotificationCenter } from './NotificationCenter';
 import { useAuth } from '../../context/AuthContext';
 
 interface ProjectOperationsWorkspaceProps {
@@ -36,7 +41,7 @@ export const ProjectOperationsWorkspace: React.FC<ProjectOperationsWorkspaceProp
 }) => {
   const { userProfile, user } = useAuth();
   const [activeSubTab, setActiveSubTab] = useState<
-    'milestones' | 'qaqc' | 'ncrs' | 'ai_inspection' | 'owner_decision' | 'evidence' | 'direct_line' | 'rfis'
+    'milestones' | 'decisions' | 'qaqc' | 'ncrs' | 'ai_inspection' | 'owner_decision' | 'memory' | 'evidence' | 'direct_line' | 'rfis'
   >('milestones');
 
   return (
@@ -75,6 +80,12 @@ export const ProjectOperationsWorkspace: React.FC<ProjectOperationsWorkspaceProp
           </div>
 
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 shrink-0">
+            {/* Notifications Center */}
+            <NotificationCenter
+              projectId={project.id}
+              onNavigateToTab={(tab: string) => setActiveSubTab(tab as any)}
+            />
+
             {/* Authenticated user active badge */}
             <div className="px-4 py-2.5 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-xs flex items-center gap-3">
               <div className="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-xs">
@@ -114,6 +125,19 @@ export const ProjectOperationsWorkspace: React.FC<ProjectOperationsWorkspaceProp
           >
             <Layers className="w-3.5 h-3.5" />
             <span>Milestones & Technical Review</span>
+          </button>
+
+          <button
+            id="tab-btn-project-decisions"
+            onClick={() => setActiveSubTab('decisions')}
+            className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition ${
+              activeSubTab === 'decisions'
+                ? 'bg-amber-500 text-slate-950 shadow-sm'
+                : 'bg-white/5 text-slate-300 hover:bg-white/10'
+            }`}
+          >
+            <Scale className="w-3.5 h-3.5" />
+            <span>Project Decisions</span>
           </button>
 
           <button
@@ -165,6 +189,19 @@ export const ProjectOperationsWorkspace: React.FC<ProjectOperationsWorkspaceProp
           </button>
 
           <button
+            id="tab-btn-project-memory"
+            onClick={() => setActiveSubTab('memory')}
+            className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition ${
+              activeSubTab === 'memory'
+                ? 'bg-amber-500 text-slate-950 shadow-sm'
+                : 'bg-white/5 text-slate-300 hover:bg-white/10'
+            }`}
+          >
+            <History className="w-3.5 h-3.5" />
+            <span>Project Memory</span>
+          </button>
+
+          <button
             onClick={() => setActiveSubTab('evidence')}
             className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition ${
               activeSubTab === 'evidence'
@@ -205,6 +242,8 @@ export const ProjectOperationsWorkspace: React.FC<ProjectOperationsWorkspaceProp
       {/* Sub-tab view */}
       {activeSubTab === 'milestones' ? (
         <MilestonesRegisterPanel projectId={project.id} isDemo={project.isDemo} />
+      ) : activeSubTab === 'decisions' ? (
+        <ProjectDecisionsPanel projectId={project.id} isDemo={project.isDemo} />
       ) : activeSubTab === 'qaqc' ? (
         <QAQCInspectionPanel projectId={project.id} isDemo={project.isDemo} />
       ) : activeSubTab === 'ncrs' ? (
@@ -213,6 +252,8 @@ export const ProjectOperationsWorkspace: React.FC<ProjectOperationsWorkspaceProp
         <AIInspectionPanel projectId={project.id} isDemo={project.isDemo} />
       ) : activeSubTab === 'owner_decision' ? (
         <OwnerDecisionPanel projectId={project.id} isDemo={project.isDemo} />
+      ) : activeSubTab === 'memory' ? (
+        <ProjectMemoryPanel projectId={project.id} isDemo={project.isDemo} />
       ) : activeSubTab === 'evidence' ? (
         <ProjectEvidencePanel projectId={project.id} isDemo={project.isDemo} />
       ) : activeSubTab === 'direct_line' ? (

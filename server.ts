@@ -7,6 +7,9 @@ import { governanceRouter } from './server/routes/governanceRoutes';
 import { directLineRouter } from './server/routes/directLineRoutes';
 import { rfiRouter } from './server/routes/rfiRoutes';
 import { milestoneRouter } from './server/routes/milestoneRoutes';
+import { projectDecisionRouter } from './server/routes/projectDecisionRoutes';
+import { projectMemoryRouter } from './server/routes/projectMemoryRoutes';
+import { notificationRouter } from './server/routes/notificationRoutes';
 import { ensureDemoDataSeeded } from './server/data/demoSeed';
 
 dotenv.config();
@@ -30,8 +33,13 @@ app.use('/api', governanceRouter);
 app.use('/api', directLineRouter);
 app.use('/api', rfiRouter);
 
-// Project Operations: Milestones, Evidence & Technical Review (Sprint 04B)
+// Project Operations: Milestones, Evidence & Technical Review (Sprint 04B/04C)
 app.use('/api', milestoneRouter);
+
+// Project Operations: Project Decisions, Project Memory & In-App Notifications (Sprint 04D)
+app.use('/api', projectDecisionRouter);
+app.use('/api', projectMemoryRouter);
+app.use('/api', notificationRouter);
 
 // Lazy initialization of GoogleGenAI
 let aiClient: GoogleGenAI | null = null;

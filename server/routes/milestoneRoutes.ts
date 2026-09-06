@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { requireAuth } from '../middleware/authMiddleware';
 import { milestoneService } from '../services/milestoneService';
+import { notificationService } from '../services/notificationService';
 import {
   createMilestoneSchema,
   createEvidenceSchema,
@@ -204,6 +205,22 @@ milestoneRouter.post('/projects/:projectId/submissions/:submissionId/submit', as
     const userId = req.user!.uid;
     const { notes } = submitPackageSchema.parse(req.body || {});
     const submitted = await milestoneService.submitPackage(projectId, submissionId, userId, notes);
+
+    // Notify Senior Project Director
+    notificationService.notifyRoles(
+      projectId,
+      ['SENIOR_PROJECT_DIRECTOR'],
+      {
+        type: 'SUBMISSION_RECEIVED',
+        title: `Work Package Submitted: ${submitted.title}`,
+        message: `Revision ${submitted.revisionNumber} submitted by General Contractor for milestone review.`,
+        severity: 'ACTION_REQUIRED',
+        relatedRecordType: 'SUBMISSION',
+        relatedRecordId: submissionId,
+        excludeUserId: userId,
+      }
+    ).catch(e => console.warn('Notif dispatch warning:', e));
+
     return res.json({ submission: submitted, message: 'Work package successfully submitted for Senior Project Director technical review.' });
   } catch (err) {
     return handleError(err, res);
@@ -245,6 +262,39 @@ milestoneRouter.post('/projects/:projectId/submissions/:submissionId/review/deci
     const userId = req.user!.uid;
     const validated = technicalReviewDecisionSchema.parse(req.body);
     const result = await milestoneService.decideTechnicalReview(projectId, submissionId, userId, validated);
+
+    if (validated.decision === 'REQUEST_CHANGES') {
+      notificationService.notifyRoles(projectId, ['GENERAL_CONTRACTOR'], {
+        type: 'CHANGES_REQUESTED',
+        title: `Changes Requested on Technical Review`,
+        message: `Senior Project Director requested revisions on ${result.submission.title}.`,
+        severity: 'ACTION_REQUIRED',
+        relatedRecordType: 'TECHNICAL_REVIEW',
+        relatedRecordId: result.review.id,
+        excludeUserId: userId,
+      }).catch(e => console.warn('Notif error:', e));
+    } else if (validated.decision === 'SEND_TO_QA_QC' || validated.decision === 'ACCEPT_TECHNICAL_SUBMISSION') {
+      notificationService.notifyRoles(projectId, ['GENERAL_CONTRACTOR'], {
+        type: 'TECHNICAL_REVIEW_COMPLETED',
+        title: `Technical Review Accepted`,
+        message: `Senior Project Director accepted technical submission for milestone ${result.milestone.title}.`,
+        severity: 'INFO',
+        relatedRecordType: 'TECHNICAL_REVIEW',
+        relatedRecordId: result.review.id,
+        excludeUserId: userId,
+      }).catch(e => console.warn('Notif error:', e));
+
+      notificationService.notifyRoles(projectId, ['STRUCTURAL_QA_QC_AUDITOR'], {
+        type: 'QA_QC_INSPECTION_REQUIRED',
+        title: `QA/QC Inspection Required`,
+        message: `Technical submission accepted. Independent QA/QC physical verification now required for ${result.milestone.title}.`,
+        severity: 'ACTION_REQUIRED',
+        relatedRecordType: 'MILESTONE',
+        relatedRecordId: result.milestone.id,
+        excludeUserId: userId,
+      }).catch(e => console.warn('Notif error:', e));
+    }
+
     return res.json({
       review: result.review,
       submission: result.submission,
@@ -305,6 +355,39 @@ milestoneRouter.post('/projects/:projectId/qaqc-inspections/:inspectionId/decisi
     const userId = req.user!.uid;
     const validated = decideQAQCInspectionSchema.parse(req.body);
     const result = await milestoneService.decideQAQCInspection(projectId, inspectionId, userId, validated);
+
+    if (validated.decision === 'FAILED') {
+      notificationService.notifyRoles(projectId, ['GENERAL_CONTRACTOR', 'SENIOR_PROJECT_DIRECTOR'], {
+        type: 'QA_QC_FAILED',
+        title: `QA/QC Inspection FAILED`,
+        message: `Quality inspection for milestone ${result.milestone.title} failed. Hold point active.`,
+        severity: 'WARNING',
+        relatedRecordType: 'QA_QC_INSPECTION',
+        relatedRecordId: inspectionId,
+        excludeUserId: userId,
+      }).catch(e => console.warn('Notif error:', e));
+    } else if (validated.decision === 'PASSED') {
+      notificationService.notifyRoles(projectId, ['GENERAL_CONTRACTOR', 'SENIOR_PROJECT_DIRECTOR'], {
+        type: 'QA_QC_PASSED',
+        title: `QA/QC Inspection PASSED`,
+        message: `Independent quality inspection verified compliant for ${result.milestone.title}.`,
+        severity: 'INFO',
+        relatedRecordType: 'QA_QC_INSPECTION',
+        relatedRecordId: inspectionId,
+        excludeUserId: userId,
+      }).catch(e => console.warn('Notif error:', e));
+
+      notificationService.notifyRoles(projectId, ['OWNER_CLIENT'], {
+        type: 'OWNER_REVIEW_READY',
+        title: `Milestone Ready for Owner Review`,
+        message: `Milestone ${result.milestone.title} inspection passed. Ready for formal Owner review.`,
+        severity: 'ACTION_REQUIRED',
+        relatedRecordType: 'MILESTONE',
+        relatedRecordId: result.milestone.id,
+        excludeUserId: userId,
+      }).catch(e => console.warn('Notif error:', e));
+    }
+
     return res.json({
       inspection: result.inspection,
       milestone: result.milestone,
@@ -351,6 +434,17 @@ milestoneRouter.post('/projects/:projectId/milestones/:milestoneId/ncrs', async 
     const userId = req.user!.uid;
     const validated = createNCRSchema.parse(req.body);
     const ncr = await milestoneService.createNCR(projectId, milestoneId, userId, validated);
+
+    notificationService.notifyRoles(projectId, ['GENERAL_CONTRACTOR'], {
+      type: 'NCR_ASSIGNED',
+      title: `Action Required: ${ncr.number} Issued`,
+      message: `Non-conformance report raised for ${ncr.requirementReference}: ${ncr.title}`,
+      severity: 'ACTION_REQUIRED',
+      relatedRecordType: 'NCR',
+      relatedRecordId: ncr.id,
+      excludeUserId: userId,
+    }).catch(e => console.warn('Notif error:', e));
+
     return res.status(201).json({ ncr, message: `Non-Conformance Report ${ncr.number} issued successfully.` });
   } catch (err) {
     return handleError(err, res);
@@ -364,6 +458,17 @@ milestoneRouter.post('/projects/:projectId/ncrs/:ncrId/corrective-action', async
     const userId = req.user!.uid;
     const validated = submitCorrectiveActionSchema.parse(req.body);
     const ncr = await milestoneService.submitNCRCorrectiveAction(projectId, ncrId, userId, validated);
+
+    notificationService.notifyRoles(projectId, ['STRUCTURAL_QA_QC_AUDITOR'], {
+      type: 'CORRECTIVE_ACTION_SUBMITTED',
+      title: `Corrective Action Submitted: ${ncr.number}`,
+      message: `Contractor submitted remediation response for ${ncr.number}. Verification required.`,
+      severity: 'ACTION_REQUIRED',
+      relatedRecordType: 'NCR',
+      relatedRecordId: ncrId,
+      excludeUserId: userId,
+    }).catch(e => console.warn('Notif error:', e));
+
     return res.json({ ncr, message: `Corrective action response submitted for ${ncr.number}.` });
   } catch (err) {
     return handleError(err, res);
@@ -377,6 +482,17 @@ milestoneRouter.post('/projects/:projectId/ncrs/:ncrId/close', async (req: Reque
     const userId = req.user!.uid;
     const validated = closeNCRSchema.parse(req.body);
     const ncr = await milestoneService.closeNCR(projectId, ncrId, userId, validated);
+
+    notificationService.notifyRoles(projectId, ['GENERAL_CONTRACTOR', 'SENIOR_PROJECT_DIRECTOR'], {
+      type: 'NCR_CLOSED',
+      title: `NCR Closed: ${ncr.number}`,
+      message: `Non-conformance report ${ncr.number} verification completed and closed.`,
+      severity: 'INFO',
+      relatedRecordType: 'NCR',
+      relatedRecordId: ncrId,
+      excludeUserId: userId,
+    }).catch(e => console.warn('Notif error:', e));
+
     return res.json({ ncr, message: `NCR decision [${validated.decision}] recorded.` });
   } catch (err) {
     return handleError(err, res);
@@ -440,6 +556,17 @@ milestoneRouter.post('/projects/:projectId/milestones/:milestoneId/owner-decisio
     const userId = req.user!.uid;
     const validated = ownerDecisionSchema.parse(req.body);
     const result = await milestoneService.decideOwnerMilestone(projectId, milestoneId, userId, validated);
+
+    notificationService.notifyRoles(projectId, ['SENIOR_PROJECT_DIRECTOR', 'GENERAL_CONTRACTOR'], {
+      type: 'OWNER_DECISION_RECORDED',
+      title: `Owner Decision: ${validated.decision}`,
+      message: `Owner recorded governance decision "${validated.decision}" for milestone ${result.milestone.title}. Financial authorized: ${result.decision.financialAuthorized}`,
+      severity: 'INFO',
+      relatedRecordType: 'OWNER_DECISION',
+      relatedRecordId: result.decision.id,
+      excludeUserId: userId,
+    }).catch(e => console.warn('Notif error:', e));
+
     return res.json({
       decision: result.decision,
       milestone: result.milestone,

@@ -965,3 +965,194 @@ export interface OwnerMilestoneDecision {
   decidedAt: string;
   isDemo?: boolean;
 }
+
+// ==========================================
+// Project Operations: Project Decisions (Sprint 04D)
+// ==========================================
+
+export type ProjectDecisionCategory =
+  | 'MATERIAL_SELECTION'
+  | 'DESIGN_VARIATION'
+  | 'SCHEDULE_ADJUSTMENT'
+  | 'BUDGET_CONTINGENCY'
+  | 'SITE_LOGISTICS'
+  | 'PROCUREMENT_STRATEGY'
+  | 'QUALITY_COMPLIANCE'
+  | 'GENERAL_GOVERNANCE';
+
+export type ProjectDecisionStatus =
+  | 'DRAFT'
+  | 'PROPOSED'
+  | 'DECIDED'
+  | 'SUPERSEDED'
+  | 'VOIDED';
+
+export interface ProjectDecisionOption {
+  id: string;
+  title: string;
+  description: string;
+  costImpactUSD?: number;
+  scheduleImpactDays?: number;
+  isRecommended?: boolean;
+}
+
+export interface ProjectDecisionParticipant {
+  userId: string;
+  role: ProjectRole;
+  name: string;
+}
+
+export interface ProjectRecordRef {
+  entityType: string;
+  entityId: string;
+  title?: string;
+  referenceCode?: string;
+}
+
+export interface ProjectDecision {
+  id: string;
+  projectId: string;
+  number: string; // e.g. DEC-001
+  title: string;
+  subject: string;
+  description: string;
+  category: ProjectDecisionCategory;
+  status: ProjectDecisionStatus;
+
+  options?: ProjectDecisionOption[];
+  selectedOptionId?: string;
+  selectedOutcome?: string;
+  rationale: string;
+
+  proposedByUserId: string;
+  proposedByRole: ProjectRole;
+  proposedByName: string;
+
+  decisionAuthorityUserId?: string;
+  decisionAuthorityRole?: ProjectRole;
+  decisionAuthorityName?: string;
+
+  participants?: ProjectDecisionParticipant[];
+  relatedRecordRefs?: ProjectRecordRef[];
+
+  supersededByDecisionId?: string;
+  supersedesDecisionId?: string;
+  supersededReason?: string;
+
+  createdAt: string;
+  updatedAt: string;
+  proposedAt?: string;
+  decidedAt?: string;
+  supersededAt?: string;
+  isDemo?: boolean;
+}
+
+// ==========================================
+// Project Operations: Project Memory (Sprint 04D)
+// ==========================================
+
+export type ProjectMemorySourceType =
+  | 'AUDIT_EVENT'
+  | 'MILESTONE'
+  | 'EVIDENCE'
+  | 'SUBMISSION'
+  | 'TECHNICAL_REVIEW'
+  | 'QA_QC_INSPECTION'
+  | 'NCR'
+  | 'AI_INSPECTION'
+  | 'OWNER_DECISION'
+  | 'PROJECT_DECISION'
+  | 'RFI'
+  | 'DIRECT_LINE';
+
+export type ProjectMemoryCategory =
+  | 'ALL'
+  | 'GOVERNANCE'
+  | 'TECHNICAL'
+  | 'QUALITY'
+  | 'COMMUNICATION'
+  | 'FINANCIAL';
+
+export interface ProjectMemoryEntry {
+  id: string;
+  projectId: string;
+  timestamp: string;
+  sourceType: ProjectMemorySourceType;
+  sourceId: string;
+  eventType: string;
+  category: ProjectMemoryCategory;
+  title: string;
+  summary: string;
+  actorUserId: string;
+  actorRole: ProjectRole | string;
+  actorName: string;
+  resultingState?: string;
+  relatedMilestoneId?: string;
+  milestoneId?: string;
+  relatedRecordRefs?: ProjectRecordRef[];
+  metadata?: Record<string, any>;
+}
+
+export interface AIMemorySummary {
+  summaryId: string;
+  projectId: string;
+  model: string; // strictly 'gemini-3.7-flash'
+  generatedAt: string;
+  isAiAssisted: boolean;
+  status: 'COMPLETED' | 'UNAVAILABLE' | 'FAILED';
+  executiveBriefing: string;
+  keyMilestoneProgress: string[];
+  activeRisksAndBlockers: string[];
+  pendingDecisionsAndActions: string[];
+  referencedSourcesCount: number;
+  sourceRecordRefs: ProjectRecordRef[];
+  disclaimer: string;
+  errorMessage?: string;
+}
+
+// ==========================================
+// Project Operations: In-App Notifications (Sprint 04D)
+// ==========================================
+
+export type NotificationType =
+  | 'RFI_CREATED'
+  | 'RFI_ASSIGNED'
+  | 'RFI_ANSWERED'
+  | 'SUBMISSION_RECEIVED'
+  | 'TECHNICAL_REVIEW_COMPLETED'
+  | 'CHANGES_REQUESTED'
+  | 'QA_QC_INSPECTION_REQUIRED'
+  | 'QA_QC_PASSED'
+  | 'QA_QC_FAILED'
+  | 'NCR_ASSIGNED'
+  | 'CORRECTIVE_ACTION_SUBMITTED'
+  | 'NCR_CLOSED'
+  | 'OWNER_REVIEW_READY'
+  | 'OWNER_DECISION_RECORDED'
+  | 'PROJECT_DECISION_PROPOSED'
+  | 'PROJECT_DECISION_DECIDED'
+  | 'PROJECT_DECISION_SUPERSEDED'
+  | 'SYSTEM_ANNOUNCEMENT';
+
+export type NotificationSeverity =
+  | 'INFO'
+  | 'ACTION_REQUIRED'
+  | 'WARNING'
+  | 'CRITICAL';
+
+export interface ProjectNotification {
+  id: string;
+  projectId: string;
+  recipientUserId: string;
+  recipientRole?: ProjectRole;
+  type: NotificationType;
+  title: string;
+  message: string;
+  severity: NotificationSeverity;
+  relatedRecordType?: string;
+  relatedRecordId?: string;
+  isRead: boolean;
+  readAt?: string;
+  createdAt: string;
+  isDemo?: boolean;
+}

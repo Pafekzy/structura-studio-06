@@ -246,3 +246,84 @@ export const ownerDecisionSchema = z.object({
   decisionNotes: z.string().min(5, 'Decision notes must be at least 5 characters').max(4000),
 });
 
+// Part R: Project Decision Schemas (Sprint 04D)
+export const createProjectDecisionSchema = z.object({
+  title: z.string().min(3, 'Title must be at least 3 characters').max(200),
+  subject: z.string().min(5, 'Decision subject must be at least 5 characters').max(300),
+  description: z.string().min(10, 'Description must be at least 10 characters').max(4000),
+  category: z.enum([
+    'MATERIAL_SELECTION',
+    'DESIGN_VARIATION',
+    'SCHEDULE_ADJUSTMENT',
+    'BUDGET_CONTINGENCY',
+    'SITE_LOGISTICS',
+    'PROCUREMENT_STRATEGY',
+    'QUALITY_COMPLIANCE',
+    'GENERAL_GOVERNANCE',
+  ]),
+  options: z.array(z.object({
+    title: z.string().min(2).max(200),
+    description: z.string().min(5).max(2000),
+    costImpactUSD: z.number().optional(),
+    scheduleImpactDays: z.number().optional(),
+    isRecommended: z.boolean().optional(),
+  })).optional().default([]),
+  rationale: z.string().max(2000).optional().default(''),
+  status: z.enum(['DRAFT', 'PROPOSED']).optional().default('PROPOSED'),
+  relatedRecordRefs: z.array(z.object({
+    entityType: z.string().min(1).max(50),
+    entityId: z.string().min(1).max(100),
+    title: z.string().max(200).optional(),
+    referenceCode: z.string().max(100).optional(),
+  })).optional().default([]),
+});
+
+export const proposeProjectDecisionSchema = z.object({
+  rationale: z.string().max(2000).optional(),
+});
+
+export const recordDecisionOutcomeSchema = z.object({
+  selectedOptionId: z.string().optional(),
+  selectedOutcome: z.string().min(3, 'Selected outcome must be at least 3 characters').max(2000),
+  rationale: z.string().min(5, 'Rationale must be at least 5 characters').max(4000),
+});
+
+export const supersedeDecisionSchema = z.object({
+  supersedingDecisionId: z.string().min(1, 'Superseding decision ID is required').max(100),
+  supersededReason: z.string().min(5, 'Superseded reason must be at least 5 characters').max(2000),
+});
+
+// Part S: Project Memory Query Schemas (Sprint 04D)
+export const queryProjectMemorySchema = z.object({
+  category: z.enum(['ALL', 'GOVERNANCE', 'TECHNICAL', 'QUALITY', 'COMMUNICATION', 'FINANCIAL']).optional().default('ALL'),
+  sourceType: z.enum([
+    'AUDIT_EVENT',
+    'MILESTONE',
+    'EVIDENCE',
+    'SUBMISSION',
+    'TECHNICAL_REVIEW',
+    'QA_QC_INSPECTION',
+    'NCR',
+    'AI_INSPECTION',
+    'OWNER_DECISION',
+    'PROJECT_DECISION',
+    'RFI',
+    'DIRECT_LINE',
+  ]).optional(),
+  milestoneId: z.string().optional(),
+  actorRole: z.string().optional(),
+  search: z.string().max(100).optional(),
+  order: z.enum(['asc', 'desc']).optional().default('desc'),
+  limit: z.coerce.number().int().min(1).max(200).optional().default(100),
+});
+
+export const requestAIMemorySummarySchema = z.object({
+  timeRangeDays: z.number().int().min(1).max(365).optional(),
+  milestoneId: z.string().optional(),
+  category: z.enum(['ALL', 'GOVERNANCE', 'TECHNICAL', 'QUALITY', 'COMMUNICATION', 'FINANCIAL']).optional().default('ALL'),
+});
+
+// Part T: Notification Mutation Schemas (Sprint 04D)
+export const markNotificationReadSchema = z.object({
+  isRead: z.boolean().default(true),
+});

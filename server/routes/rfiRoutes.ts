@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { requireAuth } from '../middleware/authMiddleware';
 import { rfiService } from '../services/rfiService';
+import { notificationService } from '../services/notificationService';
 import {
   createRFISchema,
   respondRFISchema,
@@ -69,6 +70,17 @@ rfiRouter.post('/projects/:projectId/rfis', requireAuth, async (req: Request, re
     }
 
     const rfi = await rfiService.createRFI(projectId, userId, parseResult.data);
+
+    notificationService.notifyRoles(projectId, ['SENIOR_PROJECT_DIRECTOR'], {
+      type: 'RFI_CREATED',
+      title: `RFI Submitted: ${rfi.number}`,
+      message: `${rfi.raisedByName} submitted ${rfi.priority} priority RFI: "${rfi.title}"`,
+      severity: rfi.priority === 'CRITICAL' ? 'WARNING' : 'INFO',
+      relatedRecordType: 'RFI',
+      relatedRecordId: rfi.id,
+      excludeUserId: userId,
+    }).catch(e => console.warn('Notif error:', e));
+
     return res.status(201).json(rfi);
   } catch (error: any) {
     if (error.statusCode) {
@@ -98,6 +110,17 @@ rfiRouter.post('/projects/:projectId/rfis/:rfiId/respond', requireAuth, async (r
     }
 
     const rfi = await rfiService.respondRFI(projectId, rfiId, userId, parseResult.data.response);
+
+    notificationService.notifyRoles(projectId, ['GENERAL_CONTRACTOR'], {
+      type: 'RFI_ANSWERED',
+      title: `RFI Answered: ${rfi.number}`,
+      message: `Response provided for RFI: "${rfi.title}". Acknowledgment required.`,
+      severity: 'INFO',
+      relatedRecordType: 'RFI',
+      relatedRecordId: rfi.id,
+      excludeUserId: userId,
+    }).catch(e => console.warn('Notif error:', e));
+
     return res.json(rfi);
   } catch (error: any) {
     if (error.statusCode) {

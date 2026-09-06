@@ -40,7 +40,15 @@ export type AuditAction =
   | 'OWNER_DECISION_APPROVED'
   | 'OWNER_DECISION_RETURNED'
   | 'OWNER_DECISION_REJECTED'
-  | 'FINANCIAL_PROCESSING_AUTHORIZED';
+  | 'FINANCIAL_PROCESSING_AUTHORIZED'
+  | 'PROJECT_DECISION_CREATED'
+  | 'PROJECT_DECISION_PROPOSED'
+  | 'PROJECT_DECISION_RECORDED'
+  | 'PROJECT_DECISION_SUPERSEDED'
+  | 'NOTIFICATION_READ'
+  | 'PROJECT_MEMORY_SUMMARY_REQUESTED'
+  | 'PROJECT_MEMORY_SUMMARY_COMPLETED'
+  | 'PROJECT_MEMORY_SUMMARY_FAILED';
 
 export interface AuditEvent {
   id: string;
@@ -58,6 +66,7 @@ export interface IAuditEventRepository {
   record(event: AuditEvent): Promise<AuditEvent>;
   listByProject(projectId: string): Promise<AuditEvent[]>;
   listByOrganization(organizationId: string): Promise<AuditEvent[]>;
+  getByProjectId(projectId: string): Promise<AuditEvent[]>;
 }
 
 class FirestoreAuditEventRepository implements IAuditEventRepository {
@@ -75,6 +84,10 @@ class FirestoreAuditEventRepository implements IAuditEventRepository {
   async listByProject(projectId: string): Promise<AuditEvent[]> {
     const snap = await this.getCol().where('projectId', '==', projectId).orderBy('timestamp', 'desc').get();
     return snap.docs.map(d => d.data() as AuditEvent);
+  }
+
+  async getByProjectId(projectId: string): Promise<AuditEvent[]> {
+    return this.listByProject(projectId);
   }
 
   async listByOrganization(organizationId: string): Promise<AuditEvent[]> {
@@ -126,6 +139,10 @@ class FileAuditEventRepository implements IAuditEventRepository {
     return events.filter(e => e.projectId === projectId);
   }
 
+  async getByProjectId(projectId: string): Promise<AuditEvent[]> {
+    return this.listByProject(projectId);
+  }
+
   async listByOrganization(organizationId: string): Promise<AuditEvent[]> {
     const events = this.readEvents();
     return events.filter(e => e.organizationId === organizationId);
@@ -148,6 +165,9 @@ class HybridAuditEventRepository implements IAuditEventRepository {
   }
   listByProject(projectId: string): Promise<AuditEvent[]> {
     return this.getDelegate().listByProject(projectId);
+  }
+  getByProjectId(projectId: string): Promise<AuditEvent[]> {
+    return this.getDelegate().getByProjectId(projectId);
   }
   listByOrganization(organizationId: string): Promise<AuditEvent[]> {
     return this.getDelegate().listByOrganization(organizationId);

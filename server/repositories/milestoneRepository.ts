@@ -7,6 +7,7 @@ export interface IMilestoneRepository {
   createMilestone(milestone: ProjectMilestone): Promise<ProjectMilestone>;
   getMilestoneById(id: string): Promise<ProjectMilestone | null>;
   listMilestonesByProject(projectId: string): Promise<ProjectMilestone[]>;
+  getMilestonesByProjectId(projectId: string): Promise<ProjectMilestone[]>;
   updateMilestone(id: string, updates: Partial<ProjectMilestone>): Promise<ProjectMilestone>;
 }
 
@@ -287,6 +288,10 @@ export class HybridMilestoneRepository implements IMilestoneRepository {
     }
 
     return [];
+  }
+
+  async getMilestonesByProjectId(projectId: string): Promise<ProjectMilestone[]> {
+    return this.listMilestonesByProject(projectId);
   }
 
   async updateMilestone(id: string, updates: Partial<ProjectMilestone>): Promise<ProjectMilestone> {
